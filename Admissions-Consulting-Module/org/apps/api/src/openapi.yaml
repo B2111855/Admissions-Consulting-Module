@@ -1,0 +1,139 @@
+openapi: 3.0.3
+info:
+  title: CUSC API - Form & Email
+  version: 1.0.0
+
+paths:
+  /submitform:
+    post:
+      summary: Gửi dữ liệu đăng ký học sinh
+      tags:
+        - Form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_name:
+                  type: string
+                  description: Tên học sinh
+                date_of_birth:
+                  type: string
+                  format: date
+                  description: Ngày sinh
+                gender:
+                  type: string
+                  description: Giới tính
+                email:
+                  type: string
+                  format: email
+                  description: Email học sinh
+                phone_number:
+                  type: string
+                  description: Số điện thoại
+                zalo_phone:
+                  type: string
+                  description: Số điện thoại Zalo
+                link_facebook:
+                  type: string
+                  format: uri
+                  description: Link Facebook
+                current_education_level:
+                  type: string
+                  description: Trình độ học vấn hiện tại
+                other_education_level_description:
+                  type: string
+                  description: Mô tả thêm về trình độ học vấn khác
+                high_school_name:
+                  type: string
+                  description: Tên trường THPT
+                city:
+                  type: string
+                  description: Thành phố cư trú
+                source:
+                  type: string
+                  description: Nguồn thông tin
+                registration_date:
+                  type: string
+                  description: Ngày đăng ký
+                interested_courses_details:
+                  type: object
+                  description: Chi tiết khóa học quan tâm
+      responses:
+        200:
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Đăng ký thành công'
+                  dataReceived:
+                    type: object
+                    description: Dữ liệu nhận được từ client
+        400:
+          description: Thiếu thông tin bắt buộc
+
+  /sendemail:
+    post:
+      summary: Gửi email
+      tags:
+        - Email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                  format: email
+                  description: Địa chỉ email người nhận
+                subject:
+                  type: string
+                  description: Tiêu đề email
+                text:
+                  type: string
+                  description: Nội dung email dạng thuần văn bản
+                html:
+                  type: string
+                  description: Nội dung email dạng HTML (nếu có)
+              required:
+                - to
+                - subject
+                - text
+      responses:
+        '200':
+          description: Email đã gửi thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'Email đã được gửi'
+        '400':
+          description: Yêu cầu không hợp lệ
+
+  /hello:
+    get:
+      summary: Test API trả về Hello World
+      tags:
+        - Test
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Hello World

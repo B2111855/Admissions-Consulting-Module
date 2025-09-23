@@ -1,0 +1,7 @@
+packages:
+  - 'apps/*'
+  - 'web'
+  - 'shared-types'
+ignoredBuiltDependencies:
+  - 'sharp'
+  - 'unrs-resolver'

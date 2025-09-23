@@ -1,0 +1,301 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id                                                                  Int                    @id @default(autoincrement()) @db.UnsignedInt
+  email                                                               String                 @unique(map: "email") @db.VarChar(255)
+  password_hash                                                       String                 @db.VarChar(255)
+  full_name                                                           String                 @db.VarChar(255)
+  user_type                                                           users_user_type
+  is_main_consultant                                                  Boolean?               @default(false)
+  kpi_group_id                                                        Int?                   @db.UnsignedInt
+  employment_date                                                     DateTime?              @db.Date
+  status                                                              users_status?          @default(active)
+  refresh_token                                                       String?                @db.VarChar(255)
+  refresh_token_expire                                                DateTime?              @db.DateTime(0)
+  created_at                                                          DateTime?              @default(now()) @db.DateTime(0)
+  updated_at                                                          DateTime?              @default(now()) @db.DateTime(0)
+  program_type                                                        users_program_type?    @default(Short_term___Steam)
+  consultationsessions                                                consultationsessions[]
+  counselorkpi_targets_counselorkpi_targets_counselor_idTousers       counselorkpi_targets[] @relation("counselorkpi_targets_counselor_idTousers")
+  counselorkpi_targets_counselorkpi_targets_created_by_user_idTousers counselorkpi_targets[] @relation("counselorkpi_targets_created_by_user_idTousers")
+  studentenrollments                                                  studentenrollments[]
+  students                                                            students[]
+  studentstatushistory                                                studentstatushistory[]
+  userspecializations                                                 userspecializations[]
+}
+
+model consultationsessions {
+  id                 Int                                 @id @default(autoincrement()) @db.UnsignedInt
+  counselor_id       Int                                 @db.UnsignedInt
+  student_id         Int                                 @db.UnsignedInt
+  session_date       DateTime                            @db.DateTime(0)
+  duration_minutes   Int?
+  notes              String?                             @db.Text
+  session_type       consultationsessions_session_type
+  session_status     consultationsessions_session_status
+  created_at         DateTime?                           @default(now()) @db.DateTime(0)
+  updated_at         DateTime?                           @default(now()) @db.DateTime(0)
+  users              users                               @relation(fields: [counselor_id], references: [id], onUpdate: Restrict, map: "consultationsessions_ibfk_1")
+  students           students                            @relation(fields: [student_id], references: [id], onUpdate: Restrict, map: "consultationsessions_ibfk_2")
+  studentenrollments studentenrollments[]
+
+  @@index([counselor_id], map: "consultationsessions_ibfk_1")
+  @@index([student_id], map: "consultationsessions_ibfk_2")
+}
+
+model counselorkpi_targets {
+  id                                                   Int             @id @default(autoincrement()) @db.UnsignedInt
+  counselor_id                                         Int             @db.UnsignedInt
+  kpi_id                                               Int             @db.UnsignedInt
+  target_value                                         Decimal         @db.Decimal(12, 2)
+  start_date                                           DateTime        @db.Date
+  end_date                                             DateTime        @db.Date
+  created_by_user_id                                   Int             @db.UnsignedInt
+  created_at                                           DateTime?       @default(now()) @db.DateTime(0)
+  updated_at                                           DateTime?       @default(now()) @db.DateTime(0)
+  users_counselorkpi_targets_counselor_idTousers       users           @relation("counselorkpi_targets_counselor_idTousers", fields: [counselor_id], references: [id], onUpdate: Restrict, map: "counselorkpi_targets_ibfk_1")
+  kpi_definitions                                      kpi_definitions @relation(fields: [kpi_id], references: [id], onUpdate: Restrict, map: "counselorkpi_targets_ibfk_2")
+  users_counselorkpi_targets_created_by_user_idTousers users           @relation("counselorkpi_targets_created_by_user_idTousers", fields: [created_by_user_id], references: [id], onUpdate: Restrict, map: "counselorkpi_targets_ibfk_3")
+
+  @@unique([counselor_id, kpi_id, start_date], map: "counselor_id")
+  @@index([kpi_id], map: "counselorkpi_targets_ibfk_2")
+  @@index([created_by_user_id], map: "counselorkpi_targets_ibfk_3")
+}
+
+model coursecategories {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  name        String    @unique(map: "name") @db.VarChar(255)
+  description String?   @db.Text
+  courses     courses[]
+}
+
+model courses {
+  id                         Int                          @id @default(autoincrement()) @db.UnsignedInt
+  category_id                Int                          @db.UnsignedInt
+  name                       String                       @unique(map: "name") @db.VarChar(255)
+  description                String?                      @db.Text
+  duration_text              String?                      @db.VarChar(50)
+  price                      Decimal?                     @db.Decimal(10, 2)
+  is_active                  Boolean                      @default(true)
+  program_type               courses_program_type         @default(Short_term___Steam)
+  created_at                 DateTime?                    @default(now()) @db.DateTime(0)
+  updated_at                 DateTime?                    @default(now()) @db.DateTime(0)
+  coursecategories           coursecategories             @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "courses_ibfk_1")
+  student_interested_courses student_interested_courses[]
+  studentenrollments         studentenrollments[]
+
+  @@index([category_id], map: "courses_ibfk_1")
+}
+
+model kpi_definitions {
+  id                   Int                    @id @default(autoincrement()) @db.UnsignedInt
+  name                 String                 @unique(map: "name") @db.VarChar(255)
+  unit                 String                 @db.VarChar(50)
+  counselorkpi_targets counselorkpi_targets[]
+}
+
+model student_interested_courses {
+  student_id    Int      @db.UnsignedInt
+  course_id     Int      @db.UnsignedInt
+  interest_date DateTime @default(dbgenerated("(curdate())")) @db.Date
+  notes         String?  @db.Text
+  students      students @relation(fields: [student_id], references: [id], onUpdate: Restrict, map: "student_interested_courses_ibfk_1")
+  courses       courses  @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "student_interested_courses_ibfk_2")
+
+  @@id([student_id, course_id])
+  @@index([course_id], map: "student_interested_courses_ibfk_2")
+}
+
+model studentenrollments {
+  id                      Int                               @id @default(autoincrement()) @db.UnsignedInt
+  student_id              Int                               @db.UnsignedInt
+  course_id               Int                               @db.UnsignedInt
+  enrollment_date         DateTime                          @db.Date
+  fee_paid                Decimal                           @db.Decimal(12, 2)
+  payment_status          studentenrollments_payment_status
+  counselor_id            Int                               @db.UnsignedInt
+  consultation_session_id Int?                              @db.UnsignedInt
+  notes                   String?                           @db.Text
+  created_at              DateTime?                         @default(now()) @db.DateTime(0)
+  updated_at              DateTime?                         @default(now()) @db.DateTime(0)
+  students                students                          @relation(fields: [student_id], references: [id], onUpdate: Restrict, map: "studentenrollments_ibfk_1")
+  courses                 courses                           @relation(fields: [course_id], references: [id], onUpdate: Restrict, map: "studentenrollments_ibfk_2")
+  users                   users                             @relation(fields: [counselor_id], references: [id], onUpdate: Restrict, map: "studentenrollments_ibfk_3")
+  consultationsessions    consultationsessions?             @relation(fields: [consultation_session_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "studentenrollments_ibfk_4")
+
+  @@unique([student_id, course_id, enrollment_date], map: "student_id")
+  @@index([course_id], map: "studentenrollments_ibfk_2")
+  @@index([counselor_id], map: "studentenrollments_ibfk_3")
+  @@index([consultation_session_id], map: "studentenrollments_ibfk_4")
+}
+
+model students {
+  id                                     Int                              @id @default(autoincrement()) @db.UnsignedInt
+  student_name                           String                           @db.VarChar(255)
+  email                                  String?                          @unique(map: "email") @db.VarChar(255)
+  phone_number                           String                           @db.VarChar(20) 
+  gender                                 String                           @db.VarChar(20)
+  zalo_phone                             String?                          @db.VarChar(20)
+  link_facebook                          String?                          @db.VarChar(255)
+  date_of_birth                          DateTime?                        @db.Date
+  current_education_level                students_current_education_level
+  other_education_level_description      String?                          @db.VarChar(255)
+  high_school_name                       String?                          @db.VarChar(255)
+  city                                   String?                          @db.VarChar(100)
+  source                                 String?                          @db.VarChar(255)
+  other_source_description               String?                          @db.VarChar(255)
+  notification_consent                   students_notification_consent
+  other_notification_consent_description String?                          @db.VarChar(255)
+  current_status                         students_current_status          @default(Lead)
+  assigned_counselor_id                  Int?                             @db.UnsignedInt
+  status_change_date                     DateTime                         @default(now()) @db.DateTime(0)
+  registration_date                      DateTime?                        @db.Date
+  created_at                             DateTime?                        @default(now()) @db.DateTime(0)
+  updated_at                             DateTime?                        @default(now()) @db.DateTime(0)
+  consultationsessions                   consultationsessions[]
+  student_interested_courses             student_interested_courses[]
+  studentenrollments                     studentenrollments[]
+  users                                  users?                           @relation(fields: [assigned_counselor_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "students_ibfk_1")
+  studentstatushistory                   studentstatushistory[]
+
+  @@index([assigned_counselor_id], map: "students_ibfk_1")
+}
+
+model studentstatushistory {
+  id                 Int                              @id @default(autoincrement()) @db.UnsignedInt
+  student_id         Int                              @db.UnsignedInt
+  old_status         studentstatushistory_old_status?
+  new_status         studentstatushistory_new_status
+  change_date        DateTime                         @default(now()) @db.DateTime(0)
+  changed_by_user_id Int                              @db.UnsignedInt
+  notes              String?                          @db.Text
+  created_at         DateTime?                        @default(now()) @db.DateTime(0)
+  students           students                         @relation(fields: [student_id], references: [id], onUpdate: Restrict, map: "studentstatushistory_ibfk_1")
+  users              users                            @relation(fields: [changed_by_user_id], references: [id], onUpdate: Restrict, map: "studentstatushistory_ibfk_2")
+
+  @@index([student_id], map: "studentstatushistory_ibfk_1")
+  @@index([changed_by_user_id], map: "studentstatushistory_ibfk_2")
+}
+
+model counselorspecializations {
+  id                  Int                   @id @default(autoincrement()) @db.UnsignedInt
+  name                String                @unique(map: "name") @db.VarChar(255)
+  description         String?               @db.Text
+  userspecializations userspecializations[]
+}
+
+model userspecializations {
+  user_id                  Int                      @db.UnsignedInt
+  specialization_id        Int                      @db.UnsignedInt
+  users                    users                    @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "userspecializations_ibfk_1")
+  counselorspecializations counselorspecializations @relation(fields: [specialization_id], references: [id], onUpdate: Restrict, map: "userspecializations_ibfk_2")
+
+  @@id([user_id, specialization_id])
+  @@index([specialization_id], map: "userspecializations_ibfk_2")
+}
+
+model kpi_program_config {
+  id             Int                             @id @default(autoincrement()) @db.UnsignedInt
+  program_type   kpi_program_config_program_type @unique(map: "program_type")
+  annual_target  Decimal                         @db.Decimal(10, 2)
+  monthly_target Decimal?                        @db.Decimal(10, 2)
+  created_at     DateTime?                       @default(now()) @db.DateTime(0)
+  updated_at     DateTime?                       @default(now()) @db.DateTime(0)
+}
+
+enum users_user_type {
+  admin
+  counselor
+  manager
+}
+
+enum users_status {
+  active
+  inactive
+  on_leave
+}
+
+enum studentstatushistory_old_status {
+  Lead
+  Engaging
+  Registered
+  Dropped_Out @map("Dropped Out")
+  Archived
+}
+
+enum studentstatushistory_new_status {
+  Lead
+  Engaging
+  Registered
+  Dropped_Out @map("Dropped Out")
+  Archived
+}
+
+enum studentenrollments_payment_status {
+  Pending
+  Paid
+  Partially_Paid @map("Partially Paid")
+  Refunded
+}
+
+enum consultationsessions_session_type {
+  Phone_Call     @map("Phone Call")
+  Online_Meeting @map("Online Meeting")
+  In_Person      @map("In-Person")
+  Email
+  Chat
+}
+
+enum consultationsessions_session_status {
+  Scheduled
+  Completed
+  Canceled
+  No_Show   @map("No Show")
+}
+
+enum students_current_education_level {
+  THPT
+  SinhVien
+  Other
+}
+
+
+
+enum students_notification_consent {
+  Agree
+  Disagree
+  Other
+}
+
+enum students_current_status {
+  Lead
+  Engaging
+  Registered
+  Dropped_Out @map("Dropped Out")
+  Archived
+}
+
+enum courses_program_type {
+  Aptech
+  Arena
+  Short_term___Steam @map("Short-term + Steam")
+}
+
+enum kpi_program_config_program_type {
+  Aptech
+  Arena
+  Short_term___Steam @map("Short-term + Steam")
+}
+
+enum users_program_type {
+  Aptech
+  Arena
+  Short_term___Steam @map("Short-term + Steam")
+}
