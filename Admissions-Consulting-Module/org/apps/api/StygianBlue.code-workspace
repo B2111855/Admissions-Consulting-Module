@@ -1,0 +1,16 @@
+{
+  "folders": [
+	{
+		"path": "../../../../../../../../../../xampp/htdocs/StygianBlue"
+	},
+	{
+		"path": "../../../../../../../../../../xampp/htdocs/CTUConsult"
+	},
+	{
+		"path": "../../../.."
+	}
+],
+  "settings": {
+    "intelephense.environment.includePaths": ["vendor/google/apiclient/src"]
+  }
+}

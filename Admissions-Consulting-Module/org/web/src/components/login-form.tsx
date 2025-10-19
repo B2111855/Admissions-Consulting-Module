@@ -136,7 +136,7 @@ export function LoginForm({
 
       <div className="text-center text-sm">
         <span className="text-white/60">Chưa có tài khoản? </span>
-        <a href="#" className="text-emerald-300 hover:text-emerald-200 transition-colors underline underline-offset-4">
+        <a href="../register" className="text-emerald-300 hover:text-emerald-200 transition-colors underline underline-offset-4">
           Đăng ký
         </a>
       </div>
