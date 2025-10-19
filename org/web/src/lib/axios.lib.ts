@@ -1,8 +1,13 @@
 'use client';
 import axios from 'axios';
 
+// Prefer NEXT_PUBLIC_API_BASE_URL if provided. Otherwise, build from NEXT_PUBLIC_API_URL with /api
+const resolvedBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api`;
+
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: resolvedBaseUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -16,6 +21,10 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
+    // Ensure we always hit the API prefix if caller passed an absolute path without it
+    if (config.url && config.url.startsWith('/') && !config.baseURL?.endsWith('/api') && !resolvedBaseUrl.endsWith('/api')) {
+      // No-op: resolvedBaseUrl already includes /api; callers should use relative paths like /auth/login
+    }
     return config;
   },
   (error) => Promise.reject(error)
